@@ -18,12 +18,17 @@ public class DNSlookup {
 	static final int MIN_PERMITTED_ARGUMENT_COUNT = 2;
 	static boolean tracingOn = false;
 	static InetAddress rootNameServer;
+	//byte array orresponding to a DNS query
 	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
 		String fqdn;
+		byte query[]; 
+		//create 2 byte random number QueryID
+		
+		//1 byte
 		
 		int argCount = args.length;
 		
@@ -33,8 +38,10 @@ public class DNSlookup {
 		}
 
 		rootNameServer = InetAddress.getByName(args[0]);
-		fqdn = args[1];
+		fqdn = args[1]; //fqdn = fully qualified domain name
+		System.out.println(fqdn); //Testcode, remove
 		
+		//3 arguments, trace on
 		if (argCount == 3 && args[2].equals("-t"))
 				tracingOn = true;
 		
