@@ -3,6 +3,7 @@ import java.io.*;
 import java.util.Random;
 import java.util.ArrayList;
 import java.net.DatagramPacket;
+import java.time.Instant;
 
 /**
  * 
@@ -37,6 +38,16 @@ public class DNSlookup {
 		fqdn = args[1];
 
 		sendQuery(rootNameServer, createQuery(fqdn));
+
+		/*
+		while(recordtyp != 1){
+			keep sending queries until we get a Type A response
+
+			if(tracingOn) print out each step
+		}
+
+		print out final answer
+		*/
 		
 		if (argCount == 3 && args[2].equals("-t"))
 			tracingOn = true;
@@ -46,15 +57,30 @@ public class DNSlookup {
 	
 
 	private static void sendQuery(InetAddress server, byte[] query) throws IOException{
-
 		DatagramSocket socket = new DatagramSocket();
-		socket.connect(server,53);
+		DatagramPacket packetSent = new DatagramPacket(query, query.length);
+		int responseSize;
+		DatagramPacket packetReceived;
+		byte[] data;
 
-		DatagramPacket packet = new DatagramPacket(query, query.length);
+		socket.connect(server,53);		
 
-		socket.send(packet);
-		
+		socket.send(packetSent);
 
+		responseSize = socket.getReceiveBufferSize();
+		data = new byte[responseSize];
+		packetReceived = new DatagramPacket(data, responseSize);
+		socket.receive(packetReceived);
+
+		//FOR DEBUGGING, delete/modify below this line
+		DNSResponse response = new DNSResponse(packetReceived.getData(), responseSize);
+
+		String recordName = response.getRecordName();
+		int ttl = response.getTtl();
+		int recordType = response.getRecordType();
+		InetAddress recordValue = response.getIPaddr();
+
+		System.out.format("       %-30s %-10d %-4s %s\n", recordName, ttl, recordType, recordValue);
 	}
 
 	private static byte[] createQuery(String fqdn){
@@ -75,15 +101,17 @@ public class DNSlookup {
 		for(int i = 0; i < qnameArray.length; i++){
 			query[i + 12] = qnameArray[i];
 		}
-
-		//TODO: need to format the last part of the query properly: define type maybe??
+		query[5] = (byte)1; //set the number of questions to 1
+		query[query.length - 3] = (byte)1; //set the QTYPE to 1 (type A)
+		query[query.length - 1] = (byte)1; //set the QCLASS to 1 (IN)
 
 		return query;
 	}
 
 	//Create a random 2-byte UID
 	private static byte[] createUID(){
-		Random random = new Random();
+
+		Random random = new Random(Instant.now().getEpochSecond());
 		byte[] bytes = new byte[2];
 
 		random.nextBytes(bytes);
