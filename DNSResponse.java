@@ -5,7 +5,7 @@ import java.net.InetAddress;
 
 
 public class DNSResponse {
-	private DNSQuery query;
+	//private DNSQuery query;
 	private int queryID;         /* this is for the response it must match the one in the request */
 	private byte header[];
 	private int byteNo = 0;
@@ -22,28 +22,28 @@ public class DNSResponse {
 
 	boolean isQuery = true;
 
-	void dumpResponse() {
+	// void dumpResponse() {
 		
-		System.out.println("\n\nQuery ID     " + queryID + " " + query.getQueryAsString() + " --> " + 
-				query.getServerAddress().getHostAddress());
-		System.out.println("Response ID: " + queryID + " Authoritative = " + authoritative);
+	// 	System.out.println("\n\nQuery ID     " + queryID + " " + query.getQueryAsString() + " --> " + 
+	// 			query.getServerAddress().getHostAddress());
+	// 	System.out.println("Response ID: " + queryID + " Authoritative = " + authoritative);
 
-		int i; 
-		System.out.println("  Answers (" + answerCount + ")");
-		for (i = 0; i < answerCount; i++) {
-			answerList[i].printItem();
-		}
+	// 	int i; 
+	// 	System.out.println("  Answers (" + answerCount + ")");
+	// 	for (i = 0; i < answerCount; i++) {
+	// 		answerList[i].printItem();
+	// 	}
 
-		System.out.println("  Nameservers (" + nsCount + ")");
-		for (i = 0; i < nsCount; i++) {
-			nsList[i].printItem();
-		}
-		System.out.println("  Additional Information (" + additionalCount + ")");
-		for (i = 0; i < additionalCount; i++) {
-			altInfoList[i].printItem();
-		}
+	// 	System.out.println("  Nameservers (" + nsCount + ")");
+	// 	for (i = 0; i < nsCount; i++) {
+	// 		nsList[i].printItem();
+	// 	}
+	// 	System.out.println("  Additional Information (" + additionalCount + ")");
+	// 	for (i = 0; i < additionalCount; i++) {
+	// 		altInfoList[i].printItem();
+	// 	}
 
-	}
+	// }
 
 	public InetAddress reQueryTo() {
 		InetAddress res = null;
@@ -58,9 +58,9 @@ public class DNSResponse {
 		return res;
 	}
 
-	public DNSResponse (byte[] data, int len, DNSQuery q) {
+	public DNSResponse (byte[] data, int len) {
 
-		query = q;
+		//query = q;
 		// Extract the ID
 		queryID = 	(data[byteNo++] << 8) & 0xff00; ;
 		queryID = queryID | (data[byteNo++] & 0xff);
@@ -84,8 +84,6 @@ public class DNSResponse {
 		
 		byteNo++;
 
-
-
 		// Question Count
 		int count = (data[byteNo++] << 8) & 0xff00;
 		count |= (data[byteNo++] & 0xff);
@@ -108,8 +106,6 @@ public class DNSResponse {
 		additionalCount = (data[byteNo++] << 8) & 0xFF00;
 		additionalCount |= (data[byteNo++] &0xff);
 		altInfoList = new RR[additionalCount];
-
-
 
 		// Question count of 1;
 		aaFQDN = getFQDN(data);
@@ -198,7 +194,6 @@ public class DNSResponse {
 
 	}
 
-
 	public InetAddress getIPaddr() {
 		if (answerCount >= 1) {
 			if (answerList[0].type == 1) {
@@ -206,6 +201,34 @@ public class DNSResponse {
 			} 
 		}
 		return (InetAddress) null;
+	}
+
+	public int getTtl(){
+		if (answerCount >= 1) {
+			if (answerList[0].type == 1) { //TODO Do we need this check?
+				return answerList[0].getTtl();
+			} 
+		}
+		return -1;
+	}
+
+	public String getRecordName(){
+		if (answerCount >= 1) {
+			if (answerList[0].type == 1) { //TODO Do we need this check?
+				return answerList[0].getName();
+			} 
+		}
+		return aaFQDN;
+	}
+
+	public int getRecordType(){
+		if (answerCount >= 1) {
+			return answerList[0].getType();
+		} else if(nsCount >= 1){
+			return nsList[0].getType();
+		}
+
+		return -1;
 	}
 
 	public String getCNAME() {
@@ -358,10 +381,6 @@ public class DNSResponse {
 		}
 	}
 
-
-
-
-
 	class cnameRR extends RR {
 		String cname;
 		cnameRR(String n, int t, int r, int tt, String nm) {
@@ -400,4 +419,3 @@ public class DNSResponse {
 		}
 	}
 }
-
