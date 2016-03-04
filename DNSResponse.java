@@ -198,8 +198,10 @@ public class DNSResponse {
 		if (answerCount >= 1) {
 			if (answerList[0].type == 1) {
 				return answerList[0].getIPaddress();
-			} 
-		}
+			}
+		} else if (additionalCount >=1){
+				return altInfoList[0].getIPaddress();
+			}
 		return (InetAddress) null;
 	}
 
@@ -217,6 +219,8 @@ public class DNSResponse {
 			if (answerList[0].type == 1) { //TODO Do we need this check?
 				return answerList[0].getName();
 			} 
+		} else if(nsCount >= 1){
+			return nsList[0].getName();
 		}
 		return aaFQDN;
 	}

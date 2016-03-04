@@ -19,8 +19,13 @@ public class DNSlookup {
 	static final int MIN_PERMITTED_ARGUMENT_COUNT = 2;
 	static boolean tracingOn = false;
 	static InetAddress rootNameServer;
+<<<<<<< HEAD
 	//byte array corresponding to a DNS query
 	
+=======
+	static byte[] sessionUid;
+
+>>>>>>> 1717d5afbc1178518b8a444749100792ee48e901
 	/**
 	 * @param args
 	 */
@@ -39,11 +44,17 @@ public class DNSlookup {
 		}
 
 		rootNameServer = InetAddress.getByName(args[0]);
+<<<<<<< HEAD
+=======
+		fqdn = args[1]; //fqdn = fully qualified domain name
+		System.out.println(fqdn); //Testcode, remove
+>>>>>>> 1717d5afbc1178518b8a444749100792ee48e901
 
 		fqdn = args[1];
 		
 		
 		sendQuery(rootNameServer, createQuery(fqdn));
+<<<<<<< HEAD
 		
 		//check type that we get back getRecordType()
 		//send something back depending on first level
@@ -56,6 +67,8 @@ public class DNSlookup {
 
 		print out final answer
 		*/
+=======
+>>>>>>> 1717d5afbc1178518b8a444749100792ee48e901
 		
 		//3 arguments, trace on
 		if (argCount == 3 && args[2].equals("-t"))
@@ -92,27 +105,36 @@ public class DNSlookup {
 		int recordType = response.getRecordType();
 		InetAddress recordValue = response.getIPaddr();
 
-		System.out.format("       %-30s %-10d %-4s %s\n", recordName, ttl, recordType, recordValue);
+		System.out.format("       %-30s , ttl: %-10d , record type: %-4s %s\n", recordName, ttl, recordType, recordValue);
 	}
 
+	//create a properly formatted query
 	private static byte[] createQuery(String fqdn){
 		byte[] uid = createUID();
+		//set the current uid that we are using, so we can check it later
+		sessionUid = uid;
+
 		byte[] qnameArray = createQname(fqdn);
 
 		//16 bytes + length of 
 		byte[] query = new byte[16 + qnameArray.length];
 
+		//initiate all items in the array to 0x0
 		for(int i = 0; i < query.length; i++){
 			query[i] = (byte)0;
 		}
 
+		//fill in UID in the first 2 items
 		for(int i = 0; i < 2; i++){
 			query[i] = uid[i];
 		}
 
+		//the rest of the bytes can all be 0x0
+		//fill in the domain name at the correct position
 		for(int i = 0; i < qnameArray.length; i++){
 			query[i + 12] = qnameArray[i];
 		}
+
 		query[5] = (byte)1; //set the number of questions to 1
 		query[query.length - 3] = (byte)1; //set the QTYPE to 1 (type A)
 		query[query.length - 1] = (byte)1; //set the QCLASS to 1 (IN)
@@ -131,6 +153,7 @@ public class DNSlookup {
 		return bytes;
 	}
 
+	//encode the domain name into a byte[]
 	private static byte[] createQname(String fqdn){
 		//Create an array list to hold our byte array
 		ArrayList<Byte> byteList = new ArrayList<Byte>();
