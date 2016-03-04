@@ -21,12 +21,16 @@ public class DNSlookup {
 	static boolean tracingOn = false;
 	static InetAddress rootNameServer;
 	static byte[] sessionUid;
-	
+
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
 		String fqdn;
+		byte query[]; 
+		//create 2 byte random number QueryID
+		
+		//1 byte
 		
 		int argCount = args.length;
 		
@@ -36,20 +40,12 @@ public class DNSlookup {
 		}
 
 		rootNameServer = InetAddress.getByName(args[0]);
-		fqdn = args[1];
+		fqdn = args[1]; //fqdn = fully qualified domain name
+		System.out.println(fqdn); //Testcode, remove
 
 		sendQuery(rootNameServer, createQuery(fqdn));
-
-		/*
-		while(recordtyp != 1){
-			keep sending queries until we get a Type A response
-
-			if(tracingOn) print out each step
-		}
-
-		print out final answer
-		*/
 		
+		//3 arguments, trace on
 		if (argCount == 3 && args[2].equals("-t"))
 			tracingOn = true;
 		
