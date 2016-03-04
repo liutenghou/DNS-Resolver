@@ -210,6 +210,8 @@ public class DNSResponse {
 			if (answerList[0].type == 1) { //TODO Do we need this check?
 				return answerList[0].getTtl();
 			} 
+		} else if(nsCount >=1){
+			return nsList[0].getTtl();
 		}
 		return -1;
 	}
