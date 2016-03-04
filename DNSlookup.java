@@ -3,7 +3,6 @@ import java.io.*;
 import java.util.Random;
 import java.util.ArrayList;
 import java.net.DatagramPacket;
-import java.time.Instant;
 
 /**
  * 
@@ -20,7 +19,7 @@ public class DNSlookup {
 	static final int MIN_PERMITTED_ARGUMENT_COUNT = 2;
 	static boolean tracingOn = false;
 	static InetAddress rootNameServer;
-	//byte array orresponding to a DNS query
+	//byte array corresponding to a DNS query
 	
 	/**
 	 * @param args
@@ -40,14 +39,14 @@ public class DNSlookup {
 		}
 
 		rootNameServer = InetAddress.getByName(args[0]);
-<<<<<<< HEAD
-		fqdn = args[1]; //fqdn = fully qualified domain name
-		System.out.println(fqdn); //Testcode, remove
-=======
+
 		fqdn = args[1];
-
+		
+		
 		sendQuery(rootNameServer, createQuery(fqdn));
-
+		
+		//check type that we get back getRecordType()
+		//send something back depending on first level
 		/*
 		while(recordtyp != 1){
 			keep sending queries until we get a Type A response
@@ -57,7 +56,6 @@ public class DNSlookup {
 
 		print out final answer
 		*/
->>>>>>> cbf6cbc26ed5abdb1b428efa980ce418ac0e5d7e
 		
 		//3 arguments, trace on
 		if (argCount == 3 && args[2].equals("-t"))
@@ -85,8 +83,11 @@ public class DNSlookup {
 
 		//FOR DEBUGGING, delete/modify below this line
 		DNSResponse response = new DNSResponse(packetReceived.getData(), responseSize);
-
+		
+		//response values
 		String recordName = response.getRecordName();
+		//check that these are right
+		System.out.println(recordName);
 		int ttl = response.getTtl();
 		int recordType = response.getRecordType();
 		InetAddress recordValue = response.getIPaddr();
@@ -122,7 +123,7 @@ public class DNSlookup {
 	//Create a random 2-byte UID
 	private static byte[] createUID(){
 
-		Random random = new Random(Instant.now().getEpochSecond());
+		Random random = new Random(5); //can't get time to work for some reason
 		byte[] bytes = new byte[2];
 
 		random.nextBytes(bytes);
