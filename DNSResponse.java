@@ -22,28 +22,28 @@ public class DNSResponse {
 
 	boolean isQuery = true;
 
-	// void dumpResponse() {
+	 void dumpResponse() {
 		
-	// 	System.out.println("\n\nQuery ID     " + queryID + " " + query.getQueryAsString() + " --> " + 
-	// 			query.getServerAddress().getHostAddress());
-	// 	System.out.println("Response ID: " + queryID + " Authoritative = " + authoritative);
+	 	System.out.println("\n\nQuery ID     " + queryID + " " + query.getQueryAsString() + " --> " + 
+	 			query.getServerAddress().getHostAddress());
+	 	System.out.println("Response ID: " + queryID + " Authoritative = " + authoritative);
 
-	// 	int i; 
-	// 	System.out.println("  Answers (" + answerCount + ")");
-	// 	for (i = 0; i < answerCount; i++) {
-	// 		answerList[i].printItem();
-	// 	}
+	 	int i; 
+	 	System.out.println("  Answers (" + answerCount + ")");
+	 	for (i = 0; i < answerCount; i++) {
+	 		answerList[i].printItem();
+	 	}
 
-	// 	System.out.println("  Nameservers (" + nsCount + ")");
-	// 	for (i = 0; i < nsCount; i++) {
-	// 		nsList[i].printItem();
-	// 	}
-	// 	System.out.println("  Additional Information (" + additionalCount + ")");
-	// 	for (i = 0; i < additionalCount; i++) {
-	// 		altInfoList[i].printItem();
-	// 	}
+	 	System.out.println("  Nameservers (" + nsCount + ")");
+	 	for (i = 0; i < nsCount; i++) {
+	 		nsList[i].printItem();
+	 	}
+	 	System.out.println("  Additional Information (" + additionalCount + ")");
+	 	for (i = 0; i < additionalCount; i++) {
+	 		altInfoList[i].printItem();
+	 	}
 
-	// }
+	 }
 
 	public InetAddress reQueryTo() {
 		InetAddress res = null;

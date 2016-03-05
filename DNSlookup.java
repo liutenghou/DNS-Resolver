@@ -19,13 +19,9 @@ public class DNSlookup {
 	static final int MIN_PERMITTED_ARGUMENT_COUNT = 2;
 	static boolean tracingOn = false;
 	static InetAddress rootNameServer;
-<<<<<<< HEAD
-	//byte array corresponding to a DNS query
-	
-=======
+
 	static byte[] sessionUid;
 
->>>>>>> 1717d5afbc1178518b8a444749100792ee48e901
 	/**
 	 * @param args
 	 */
@@ -44,17 +40,13 @@ public class DNSlookup {
 		}
 
 		rootNameServer = InetAddress.getByName(args[0]);
-<<<<<<< HEAD
-=======
-		fqdn = args[1]; //fqdn = fully qualified domain name
-		System.out.println(fqdn); //Testcode, remove
->>>>>>> 1717d5afbc1178518b8a444749100792ee48e901
+
 
 		fqdn = args[1];
 		
 		
 		sendQuery(rootNameServer, createQuery(fqdn));
-<<<<<<< HEAD
+
 		
 		//check type that we get back getRecordType()
 		//send something back depending on first level
@@ -67,8 +59,6 @@ public class DNSlookup {
 
 		print out final answer
 		*/
-=======
->>>>>>> 1717d5afbc1178518b8a444749100792ee48e901
 		
 		//3 arguments, trace on
 		if (argCount == 3 && args[2].equals("-t"))
@@ -144,7 +134,7 @@ public class DNSlookup {
 
 	//Create a random 2-byte UID
 	private static byte[] createUID(){
-
+		//TODO: fix random
 		Random random = new Random(5); //can't get time to work for some reason
 		byte[] bytes = new byte[2];
 
