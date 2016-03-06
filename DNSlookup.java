@@ -19,6 +19,9 @@ public class DNSlookup {
 	static boolean tracingOn = false;
 	static InetAddress rootNameServer;
 	static byte[] sessionUid;
+	static InetAddress recordValue;
+	static int recordType;
+	static byte[] query;
 
 	/**
 	 * @param args
@@ -39,34 +42,32 @@ public class DNSlookup {
 		
 		rootNameServer = InetAddress.getByName(args[0]); //gets back InetAddress object
 		
-		
 		fqdn = args[1];
 		//System.out.println(fqdn); //test, TODO: remove 
 		
 		try{
-			sendQuery(rootNameServer, createQuery(fqdn));
+			query = createQuery(fqdn);
+			sendQuery(rootNameServer, query);
+			
+			//check type that we get back getRecordType()
+			//send something back depending on first level
+			
+			while(recordType != 1){
+				//keep sending queries until we get a Type A response
+				sendQuery(recordValue, query);
+				//if(tracingOn) print out each step
+			}
+
+			//print out final answer
+			
 		}catch(Exception e){
 			System.out.println("ERROR: " + e.getMessage());
 		}
 		
-
-		
-		//check type that we get back getRecordType()
-		//send something back depending on first level
-		/*
-		while(recordtyp != 1){
-			keep sending queries until we get a Type A response
-
-			if(tracingOn) print out each step
-		}
-
-		print out final answer
-		*/
-		
 		//3 arguments, trace on
-		if (argCount == 3 && args[2].equals("-t"))
+		if (argCount == 3 && args[2].equals("-t")){
 			tracingOn = true;
-		
+		}	
 	}
 
 	private static void sendQuery(InetAddress server, byte[] query) throws IOException{
@@ -92,8 +93,8 @@ public class DNSlookup {
 		//response values
 		String recordName = response.getRecordName();
 		int ttl = response.getTtl();
-		int recordType = response.getRecordType();
-		InetAddress recordValue = response.getIPaddr();
+		recordType = response.getRecordType();
+		recordValue = response.getIPaddr();
 
 		System.out.format("       %-30s , ttl: %-10d , record type: %-4s %s\n", recordName, ttl, recordType, recordValue);
 	}

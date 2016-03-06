@@ -27,7 +27,7 @@ public class DNSResponse {
 		
 //	 	System.out.println("\n\nQuery ID     " + queryID + " " + query.getQueryAsString() + " --> " + 
 //	 			query.getServerAddress().getHostAddress());
-//	 	System.out.println("Response ID: " + queryID + " Authoritative = " + authoritative);
+	 	System.out.println("Response ID: " + queryID + " Authoritative = " + authoritative);
 
 	 	int i; 
 	 	System.out.println("  Answers (" + answerCount + ")");
