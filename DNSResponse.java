@@ -1,5 +1,6 @@
 
 import java.net.InetAddress;
+import java.util.*;
 
 
 
@@ -21,7 +22,7 @@ public class DNSResponse {
 	private String aaFQDN; 
 
 	boolean isQuery = true;
-
+/*
 	 void dumpResponse() {
 		
 	 	System.out.println("\n\nQuery ID     " + queryID + " " + query.getQueryAsString() + " --> " + 
@@ -44,6 +45,7 @@ public class DNSResponse {
 	 	}
 
 	 }
+*/
 
 	public InetAddress reQueryTo() {
 		InetAddress res = null;
@@ -60,49 +62,52 @@ public class DNSResponse {
 
 	public DNSResponse (byte[] data, int len) {
 
-		//query = q;
-		// Extract the ID
+		// System.out.println(Arrays.toString(data));
+		// query = q;
+		
+		// 1st and 2nd bytes, QUERYID
 		queryID = 	(data[byteNo++] << 8) & 0xff00; ;
 		queryID = queryID | (data[byteNo++] & 0xff);
 
-		// Either not a query response to a standard query
+		// Check if 3rd byte, first bit is 1 (query response)
+		// if not return
 		if ((data[byteNo] & 0xc0) != 0x80 ) {
 			return;
 		}
-	
-
 		if ((data[byteNo] & 0x4) != 0) {
 			authoritative = true;
 		}
 
+		//TODO: use this for errors
+		//4th byte, RCODE: reply code
 		byteNo++;  
 		replyCode = data[byteNo] & 0xf;
-
 		if (replyCode != 0) {
 			return;
 		}
 		
+		//5th and 6th byte, QDCOUNT: query count
 		byteNo++;
-
-		// Question Count
 		int count = (data[byteNo++] << 8) & 0xff00;
 		count |= (data[byteNo++] & 0xff);
-
 		// We are only ever going to deal with questions of size 1;
-		if (count != 1)
+		if (count != 1){
 			return; 
-
-		// Answer Count
+		}
+		
+		//7th and 8th byte, ANCOUNT: Answer Count
 		answerCount = (data[byteNo++] << 8) & 0xFF00;
-		answerCount |=  (data[byteNo++] & 0xff);
+		answerCount |=  (data[byteNo++] & 0xff); //what the heck is |=
 		answerList = new RR[answerCount];
+		
+		
 
-		// NS Count
+		//9th and 10th byte, NSCOUNT: Name server records
 		nsCount = (data[byteNo++] << 8) & 0xFF00;
 		nsCount |= (data[byteNo++] & 0xff);
 		nsList = new RR[nsCount];
 
-		// AR Count;
+		//11th and 12th byte, ARCOUNT: Additional Records Count
 		additionalCount = (data[byteNo++] << 8) & 0xFF00;
 		additionalCount |= (data[byteNo++] &0xff);
 		altInfoList = new RR[additionalCount];
@@ -117,7 +122,6 @@ public class DNSResponse {
 		}
 
 		// Name servers
-
 		for (int i = 0; i < nsCount; i++) {
 			nsList[i] = getRR(data);
 		}

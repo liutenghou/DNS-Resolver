@@ -1,7 +1,6 @@
 import java.net.*;
 import java.io.*;
-import java.util.Random;
-import java.util.ArrayList;
+import java.util.*;
 import java.net.DatagramPacket;
 
 /**
@@ -19,7 +18,6 @@ public class DNSlookup {
 	static final int MIN_PERMITTED_ARGUMENT_COUNT = 2;
 	static boolean tracingOn = false;
 	static InetAddress rootNameServer;
-
 	static byte[] sessionUid;
 
 	/**
@@ -38,14 +36,19 @@ public class DNSlookup {
 			usage();
 			return;
 		}
-
-		rootNameServer = InetAddress.getByName(args[0]);
-
-
+		
+		rootNameServer = InetAddress.getByName(args[0]); //gets back InetAddress object
+		
+		
 		fqdn = args[1];
+		//System.out.println(fqdn); //test, TODO: remove 
 		
+		try{
+			sendQuery(rootNameServer, createQuery(fqdn));
+		}catch(Exception e){
+			System.out.println("ERROR: " + e.getMessage());
+		}
 		
-		sendQuery(rootNameServer, createQuery(fqdn));
 
 		
 		//check type that we get back getRecordType()
@@ -66,8 +69,6 @@ public class DNSlookup {
 		
 	}
 
-	
-
 	private static void sendQuery(InetAddress server, byte[] query) throws IOException{
 		DatagramSocket socket = new DatagramSocket();
 		DatagramPacket packetSent = new DatagramPacket(query, query.length);
@@ -77,7 +78,7 @@ public class DNSlookup {
 
 		socket.connect(server,53);		
 
-		socket.send(packetSent);
+		socket.send(packetSent); //sends the byte packet
 
 		responseSize = socket.getReceiveBufferSize();
 		data = new byte[responseSize];
@@ -86,11 +87,10 @@ public class DNSlookup {
 
 		//FOR DEBUGGING, delete/modify below this line
 		DNSResponse response = new DNSResponse(packetReceived.getData(), responseSize);
-		
+		System.out.println(response);
+		//TODO: check these
 		//response values
 		String recordName = response.getRecordName();
-		//check that these are right
-		System.out.println(recordName);
 		int ttl = response.getTtl();
 		int recordType = response.getRecordType();
 		InetAddress recordValue = response.getIPaddr();
@@ -103,9 +103,10 @@ public class DNSlookup {
 		byte[] uid = createUID();
 		//set the current uid that we are using, so we can check it later
 		sessionUid = uid;
-
+		
+		
 		byte[] qnameArray = createQname(fqdn);
-
+		
 		//16 bytes + length of 
 		byte[] query = new byte[16 + qnameArray.length];
 
@@ -129,13 +130,14 @@ public class DNSlookup {
 		query[query.length - 3] = (byte)1; //set the QTYPE to 1 (type A)
 		query[query.length - 1] = (byte)1; //set the QCLASS to 1 (IN)
 
+		System.out.println("query: " + Arrays.toString(query)); //test, TODO: remove
 		return query;
 	}
 
 	//Create a random 2-byte UID
 	private static byte[] createUID(){
-		//TODO: fix random
-		Random random = new Random(5); //can't get time to work for some reason
+		//TODO: fix random, maybe
+		Random random = new Random(); //can't get time to work for some reason
 		byte[] bytes = new byte[2];
 
 		random.nextBytes(bytes);
