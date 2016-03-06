@@ -22,12 +22,12 @@ public class DNSResponse {
 	private String aaFQDN; 
 
 	boolean isQuery = true;
-/*
+
 	 void dumpResponse() {
 		
-	 	System.out.println("\n\nQuery ID     " + queryID + " " + query.getQueryAsString() + " --> " + 
-	 			query.getServerAddress().getHostAddress());
-	 	System.out.println("Response ID: " + queryID + " Authoritative = " + authoritative);
+//	 	System.out.println("\n\nQuery ID     " + queryID + " " + query.getQueryAsString() + " --> " + 
+//	 			query.getServerAddress().getHostAddress());
+//	 	System.out.println("Response ID: " + queryID + " Authoritative = " + authoritative);
 
 	 	int i; 
 	 	System.out.println("  Answers (" + answerCount + ")");
@@ -45,7 +45,7 @@ public class DNSResponse {
 	 	}
 
 	 }
-*/
+
 
 	public InetAddress reQueryTo() {
 		InetAddress res = null;
@@ -99,8 +99,6 @@ public class DNSResponse {
 		answerCount = (data[byteNo++] << 8) & 0xFF00;
 		answerCount |=  (data[byteNo++] & 0xff); //what the heck is |=
 		answerList = new RR[answerCount];
-		
-		
 
 		//9th and 10th byte, NSCOUNT: Name server records
 		nsCount = (data[byteNo++] << 8) & 0xFF00;
@@ -134,6 +132,8 @@ public class DNSResponse {
 		//System.out.println("The fqdn is: " + aaFQDN);
 
 		decoded = true;
+		
+		dumpResponse();
 	}
 
 	private String getCompressedFQDN(String fqdn, byte[] data, int offset) {
@@ -346,7 +346,8 @@ public class DNSResponse {
 		byteNo += len;	
 		return responseRecord;
 	}
-
+	
+	//Response Record
 	private class RR {
 		private String recordName;
 		private int type;
@@ -377,7 +378,6 @@ public class DNSResponse {
 		}
 
 	}
-
 
 	class nameServerRR extends RR {
 		String serverName;

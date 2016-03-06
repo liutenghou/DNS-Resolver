@@ -87,7 +87,7 @@ public class DNSlookup {
 
 		//FOR DEBUGGING, delete/modify below this line
 		DNSResponse response = new DNSResponse(packetReceived.getData(), responseSize);
-		System.out.println(response);
+	
 		//TODO: check these
 		//response values
 		String recordName = response.getRecordName();
