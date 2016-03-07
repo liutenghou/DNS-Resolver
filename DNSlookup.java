@@ -21,17 +21,20 @@ public class DNSlookup {
 	static InetAddress recordValue;
 	static int recordType;
 	static byte[] query;
+	static DNSResponse response;
+	static int ttl; //find answer TTL
+	static String finalIP; //the final answer IP address
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-		String fqdn;
+		//initialize variables
+		String fqdn = "";
+		ttl = -4;
+		finalIP = "0.0.0.0";
 		byte query[]; 
-		//create 2 byte random number QueryID
-		
-		//1 byte
-		
+
 		int argCount = args.length;
 		
 		if (argCount < 2 || argCount > 3) {
@@ -44,29 +47,38 @@ public class DNSlookup {
 		fqdn = args[1];
 		//System.out.println(fqdn); //test, TODO: remove 
 		
-		try{
-			query = createQuery(fqdn);
-			sendQuery(rootNameServer, query);
-			
-			//check type that we get back getRecordType()
-			//send something back depending on first level
-			
-			while(recordType != 1){
-				//keep sending queries until we get a Type A response
-				sendQuery(recordValue, query);
-				//if(tracingOn) print out each step
-			}
-
-			//print out final answer
-			
-		}catch(Exception e){
-			System.out.println("ERROR: " + e.getMessage());
-		}
-		
 		//3 arguments, trace on
 		if (argCount == 3 && args[2].equals("-t")){
 			tracingOn = true;
 		}	
+		
+		try{
+			query = createQuery(fqdn);
+			sendQuery(rootNameServer, query);
+			
+			//TODO: deal with timeouts, no server response
+			
+			//check type that we get back getRecordType()
+			//send something back depending on first level
+			int count = 0;
+			while(recordType != 1 && count < 30){
+				//keep sending queries until we get a Type A response, or 30 requests
+				count++;
+				if(count >= 30){
+					ttl = -3;
+					finalIP = "0.0.0.0";
+					break;
+				}
+				sendQuery(recordValue, query);
+				ttl = response.getTtl();
+				finalIP = recordValue.getHostAddress();
+			}
+			//print out final answer
+			System.out.println(fqdn + " " + ttl + " " + finalIP);
+			
+		}catch(Exception e){
+			System.out.println("ERROR: " + e.getMessage());
+		}
 	}
 
 	private static void sendQuery(InetAddress server, byte[] query) throws IOException{
@@ -86,16 +98,15 @@ public class DNSlookup {
 		socket.receive(packetReceived);
 
 		//FOR DEBUGGING, delete/modify below this line
-		DNSResponse response = new DNSResponse(packetReceived.getData(), responseSize, server);
+		response = new DNSResponse(packetReceived.getData(), responseSize, server, tracingOn);
 	
-		//TODO: check these
-		//response values
+		//TODO: check these response values
 		String recordName = response.getRecordName();
-		int ttl = response.getTtl();
+		ttl = response.getTtl();
 		recordType = response.getRecordType();
 		recordValue = response.getIPaddr();
 
-		System.out.format(">> %-30s , ttl: %-10d , record type: %-4s %s\n", recordName, ttl, recordType, recordValue);
+		System.out.format("4DEBUG: %-30s , ttl: %-10d , record type: %-4s %s\n", recordName, ttl, recordType, recordValue);
 	}
 
 	//create a properly formatted query

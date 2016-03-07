@@ -57,7 +57,7 @@ public class DNSResponse {
 		return res;
 	}
 
-	public DNSResponse (byte[] data, int len, InetAddress server) {
+	public DNSResponse (byte[] data, int len, InetAddress server, Boolean tracingOn) {
 		this.server = server;
 		// System.out.println(Arrays.toString(data));
 		// query = q;
@@ -130,7 +130,10 @@ public class DNSResponse {
 
 		decoded = true;
 		
-		dumpResponse();
+		//if -t option, print trace
+		if(tracingOn){
+			dumpResponse();
+		}
 	}
 
 	private String getCompressedFQDN(String fqdn, byte[] data, int offset) {
