@@ -74,7 +74,7 @@ public class DNSlookup {
 				finalIP = recordValue.getHostAddress();
 			}
 		}catch(NullPointerException E){ //check if there is no ip for domain requested
-			if(recordType == -1){
+			if(recordType == -1 && (response.getReplyCode() == 3)){
 				ttl = -1;
 				finalIP = "0.0.0.0";
 			}

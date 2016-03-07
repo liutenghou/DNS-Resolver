@@ -135,7 +135,8 @@ public class DNSResponse {
 			dumpResponse();
 		}
 	}
-
+	
+	
 	private String getCompressedFQDN(String fqdn, byte[] data, int offset) {
 		boolean firstTime = true;
 
@@ -268,7 +269,8 @@ public class DNSResponse {
 	public int getLength() {
 		return byteNo;
 	}
-
+	
+	//get RCODE for use by DNSlookup
 	public int getReplyCode() {
 		return replyCode;
 	}
