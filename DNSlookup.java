@@ -70,19 +70,19 @@ public class DNSlookup {
 					break;
 				}
 				sendQuery(recordValue, query); //note this updates recordType
-				//check if there is no ip for domain requested
-				if(recordType == -1){
-					ttl = -1;
-					finalIP = "0.0.0.0";
-					break;
-				}
 				ttl = response.getTtl();
 				finalIP = recordValue.getHostAddress();
 			}
-		}catch(SocketTimeoutException e){
+		}catch(NullPointerException E){ //check if there is no ip for domain requested
+			if(recordType == -1){
+				ttl = -1;
+				finalIP = "0.0.0.0";
+			}
+		}catch(SocketTimeoutException e){ //timeout waiting for response from root
 			ttl = -2;
 			finalIP = "0.0.0.0";
 		}catch(Exception e){
+			System.out.println("TYPE: " + e.getClass().getName());
 			System.out.println("ERROR: " + e.getMessage());
 		}
 		//print out final answer
