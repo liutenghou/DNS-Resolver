@@ -48,7 +48,7 @@ public class DNSlookup {
 		//System.out.println(fqdn); //test, TODO: remove 
 		
 		//3 arguments, trace on
-		if (argCount == 3 && args[2].equals("-t")){
+		if (argCount == 3 && args[2].equals("-t")){ //TODO: add check for -x where x != t
 			tracingOn = true;
 		}	
 		
@@ -69,7 +69,13 @@ public class DNSlookup {
 					finalIP = "0.0.0.0";
 					break;
 				}
-				sendQuery(recordValue, query);
+				sendQuery(recordValue, query); //note this updates recordType
+				//check if there is no ip for domain requested
+				if(recordType == -1){
+					ttl = -1;
+					finalIP = "0.0.0.0";
+					break;
+				}
 				ttl = response.getTtl();
 				finalIP = recordValue.getHostAddress();
 			}
@@ -77,6 +83,7 @@ public class DNSlookup {
 			System.out.println(fqdn + " " + ttl + " " + finalIP);
 			
 		}catch(Exception e){
+			
 			System.out.println("ERROR: " + e.getMessage());
 		}
 	}
