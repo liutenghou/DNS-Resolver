@@ -79,13 +79,14 @@ public class DNSlookup {
 				ttl = response.getTtl();
 				finalIP = recordValue.getHostAddress();
 			}
-			//print out final answer
-			System.out.println(fqdn + " " + ttl + " " + finalIP);
-			
+		}catch(SocketTimeoutException e){
+			ttl = -2;
+			finalIP = "0.0.0.0";
 		}catch(Exception e){
-			
 			System.out.println("ERROR: " + e.getMessage());
 		}
+		//print out final answer
+		System.out.println(fqdn + " " + ttl + " " + finalIP);
 	}
 
 	private static void sendQuery(InetAddress server, byte[] query) throws IOException{
@@ -94,9 +95,9 @@ public class DNSlookup {
 		int responseSize;
 		DatagramPacket packetReceived;
 		byte[] data;
-
-		socket.connect(server,53);		
-
+		
+		socket.setSoTimeout(4000); //timeout if waiting for more than 4 seconds for response
+		socket.connect(server,53);	
 		socket.send(packetSent); //sends the byte packet
 
 		responseSize = socket.getReceiveBufferSize();
