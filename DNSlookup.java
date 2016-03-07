@@ -55,6 +55,8 @@ public class DNSlookup {
 		try{
 			query = createQuery(fqdn);
 			sendQuery(rootNameServer, query);
+			ttl = response.getTtl();
+			finalIP = recordValue.getHostAddress();
 			
 			//TODO: deal with timeouts, no server response
 			
@@ -149,7 +151,7 @@ public class DNSlookup {
 		query[query.length - 3] = (byte)1; //set the QTYPE to 1 (type A)
 		query[query.length - 1] = (byte)1; //set the QCLASS to 1 (IN)
 
-		System.out.println("query: " + Arrays.toString(query)); //test, TODO: remove
+		//System.out.println("query: " + Arrays.toString(query)); //test, TODO: remove
 		return query;
 	}
 
