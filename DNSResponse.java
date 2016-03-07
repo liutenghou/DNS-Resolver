@@ -1,9 +1,5 @@
-
 import java.net.InetAddress;
 import java.util.*;
-
-
-
 
 public class DNSResponse {
 	//private DNSQuery query;
@@ -20,13 +16,16 @@ public class DNSResponse {
 	private RR nsList[];
 	private RR altInfoList[];
 	private String aaFQDN; 
+	private InetAddress server;
 
 	boolean isQuery = true;
 
-	 void dumpResponse() {
-		
+	void dumpResponse() {
+		//original
 //	 	System.out.println("\n\nQuery ID     " + queryID + " " + query.getQueryAsString() + " --> " + 
 //	 			query.getServerAddress().getHostAddress());
+		System.out.println("\n\nQuery ID     " + queryID + " " + aaFQDN + " --> " +
+				server.getHostAddress());
 	 	System.out.println("Response ID: " + queryID + " Authoritative = " + authoritative);
 
 	 	int i; 
@@ -43,10 +42,8 @@ public class DNSResponse {
 	 	for (i = 0; i < additionalCount; i++) {
 	 		altInfoList[i].printItem();
 	 	}
-
 	 }
-
-
+	
 	public InetAddress reQueryTo() {
 		InetAddress res = null;
 
@@ -60,8 +57,8 @@ public class DNSResponse {
 		return res;
 	}
 
-	public DNSResponse (byte[] data, int len) {
-
+	public DNSResponse (byte[] data, int len, InetAddress server) {
+		this.server = server;
 		// System.out.println(Arrays.toString(data));
 		// query = q;
 		
@@ -360,7 +357,6 @@ public class DNSResponse {
 			rclass = r;
 			ttl = tt;
 		}
-
 
 		String getName() { return recordName; }
 		int getType() { return type; }

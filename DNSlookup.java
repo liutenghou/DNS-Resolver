@@ -1,7 +1,6 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
-import java.net.DatagramPacket;
 
 /**
  * 
@@ -87,7 +86,7 @@ public class DNSlookup {
 		socket.receive(packetReceived);
 
 		//FOR DEBUGGING, delete/modify below this line
-		DNSResponse response = new DNSResponse(packetReceived.getData(), responseSize);
+		DNSResponse response = new DNSResponse(packetReceived.getData(), responseSize, server);
 	
 		//TODO: check these
 		//response values
@@ -96,7 +95,7 @@ public class DNSlookup {
 		recordType = response.getRecordType();
 		recordValue = response.getIPaddr();
 
-		System.out.format("       %-30s , ttl: %-10d , record type: %-4s %s\n", recordName, ttl, recordType, recordValue);
+		System.out.format(">> %-30s , ttl: %-10d , record type: %-4s %s\n", recordName, ttl, recordType, recordValue);
 	}
 
 	//create a properly formatted query
