@@ -46,47 +46,60 @@ public class DNSlookup {
 		
 		fqdn = args[1];
 		//System.out.println(fqdn); //test, TODO: remove 
+		//TODO: check if Additional Information is 0
+		//TODO: possible for response to have wrong ID?
 		
 		//3 arguments, trace on
 		if (argCount == 3 && args[2].equals("-t")){ //TODO: add check for -x where x != t
 			tracingOn = true;
 		}	
 		
-		try{
-			query = createQuery(fqdn);
-			sendQuery(rootNameServer, query);
-			ttl = response.getTtl();
-			finalIP = recordValue.getHostAddress();
-			
-			//TODO: deal with timeouts, no server response
-			
-			//check type that we get back getRecordType()
-			//send something back depending on first level
-			int count = 0;
-			while(recordType != 1 && count < 30){
-				//keep sending queries until we get a Type A response, or 30 requests
-				count++;
-				if(count >= 30){
-					ttl = -3;
-					finalIP = "0.0.0.0";
-					break;
-				}
-				sendQuery(recordValue, query); //note this updates recordType
+		boolean retry = false;
+		int retryCount = 0;
+		do{
+			retry = false;
+			try{
+				//for the first query
+				query = createQuery(fqdn);
+				sendQuery(rootNameServer, query);
 				ttl = response.getTtl();
 				finalIP = recordValue.getHostAddress();
-			}
-		}catch(NullPointerException E){ //check if there is no ip for domain requested
-			if(recordType == -1 && (response.getReplyCode() == 3)){
-				ttl = -1;
+				
+				//TODO: deal with timeouts, no server response
+				
+				//check type that we get back getRecordType()
+				//send something back depending on first level
+				int count = 0;
+				while(recordType != 1 && count < 30){
+					//keep sending queries until we get a Type A response, or 30 requests
+					count++;
+					if(count >= 30){
+						ttl = -3;
+						finalIP = "0.0.0.0";
+						break;
+					}
+					sendQuery(recordValue, query); //note this updates recordType
+					ttl = response.getTtl();
+					finalIP = recordValue.getHostAddress();
+				}
+			}catch(NullPointerException E){ //check if there is no ip for domain requested
+				if(recordType == -1 && (response.getReplyCode() == 3)){
+					ttl = -1;
+					finalIP = "0.0.0.0";
+				}
+			}catch(SocketTimeoutException e){ //timeout waiting for response from root
+				//retry the query 1 more time if timeout
+				retry = true;
+				retryCount++;
+				ttl = -2;
 				finalIP = "0.0.0.0";
+			}catch(Exception e){
+				System.out.println("TYPE: " + e.getClass().getName());
+				System.out.println("ERROR: " + e.getMessage());
 			}
-		}catch(SocketTimeoutException e){ //timeout waiting for response from root
-			ttl = -2;
-			finalIP = "0.0.0.0";
-		}catch(Exception e){
-			System.out.println("TYPE: " + e.getClass().getName());
-			System.out.println("ERROR: " + e.getMessage());
-		}
+			
+		}while(retryCount <= 1 && retry == true);
+		
 		//print out final answer
 		System.out.println(fqdn + " " + ttl + " " + finalIP);
 	}
@@ -98,7 +111,7 @@ public class DNSlookup {
 		DatagramPacket packetReceived;
 		byte[] data;
 		
-		socket.setSoTimeout(4000); //timeout if waiting for more than 4 seconds for response
+		socket.setSoTimeout(5000); //timeout if waiting for more than 4 seconds for response
 		socket.connect(server,53);	
 		socket.send(packetSent); //sends the byte packet
 
@@ -124,7 +137,6 @@ public class DNSlookup {
 		byte[] uid = createUID();
 		//set the current uid that we are using, so we can check it later
 		sessionUid = uid;
-		
 		
 		byte[] qnameArray = createQname(fqdn);
 		
