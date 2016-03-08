@@ -24,6 +24,7 @@ public class DNSlookup {
 	static DNSResponse response;
 	static int ttl; //find answer TTL
 	static String finalIP; //the final answer IP address
+	static String cname;
 
 	/**
 	 * @param args
@@ -65,8 +66,6 @@ public class DNSlookup {
 				ttl = response.getTtl();
 				finalIP = recordValue.getHostAddress();
 				
-				//TODO: deal with timeouts, no server response
-				
 				//check type that we get back getRecordType()
 				//send something back depending on first level
 				int count = 0;
@@ -78,27 +77,39 @@ public class DNSlookup {
 						finalIP = "0.0.0.0";
 						break;
 					}
-					sendQuery(recordValue, query); //note this updates recordType
-					ttl = response.getTtl();
-					finalIP = recordValue.getHostAddress();
+					
+					//if CNAME, record type == 5
+					if(recordType == 5){
+						cname = response.getCNAME();
+						query = createQuery(cname); //create another query with new doamin name
+						sendQuery(rootNameServer, query);
+						ttl = response.getTtl();
+					}else{
+						sendQuery(recordValue, query); //note this updates recordType
+						ttl = response.getTtl();
+						finalIP = recordValue.getHostAddress();
+					}
 				}
-			}catch(NullPointerException E){ //check if there is no ip for domain requested
+			}catch(NullPointerException e){ //check if there is no ip for domain requested
 				if(recordType == -1 && (response.getReplyCode() == 3)){
 					ttl = -1;
 					finalIP = "0.0.0.0";
 				}
+				//TODO: remove below
+				//System.out.println("NULL POINTER: "+e.getLocalizedMessage());
 			}catch(SocketTimeoutException e){ //timeout waiting for response from root
 				//retry the query 1 more time if timeout
 				retry = true;
 				retryCount++;
 				ttl = -2;
 				finalIP = "0.0.0.0";
+				//System.out.println("SocketTimeOut: "+e.getLocalizedMessage());
 			}catch(Exception e){
+				//TODO: remove below
 				System.out.println("TYPE: " + e.getClass().getName());
 				System.out.println("ERROR: " + e.getMessage());
 			}
-			
-		}while(retryCount <= 1 && retry == true);
+		}while(retryCount <= 1 && retry == true); //allow 1 retry in case of timeout
 		
 		//print out final answer
 		System.out.println(fqdn + " " + ttl + " " + finalIP);
@@ -122,13 +133,15 @@ public class DNSlookup {
 
 		//FOR DEBUGGING, delete/modify below this line
 		response = new DNSResponse(packetReceived.getData(), responseSize, server, tracingOn);
-	
+		recordType = response.getRecordType();
 		//TODO: check these response values
 		String recordName = response.getRecordName();
-		ttl = response.getTtl();
-		recordType = response.getRecordType();
-		recordValue = response.getIPaddr();
-
+		
+		if(recordType != 5){
+			ttl = response.getTtl();
+			recordValue = response.getIPaddr(); //TODO: this should probably be moved up to the main method
+		}
+		
 		System.out.format("4DEBUG: %-30s , ttl: %-10d , record type: %-4s %s\n", recordName, ttl, recordType, recordValue);
 	}
 
