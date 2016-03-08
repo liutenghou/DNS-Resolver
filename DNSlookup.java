@@ -96,14 +96,14 @@ public class DNSlookup {
 					finalIP = "0.0.0.0";
 				}
 				//TODO: remove below
-				//System.out.println("NULL POINTER: "+e.getLocalizedMessage());
+				System.out.println("NULL POINTER: "+e.getLocalizedMessage());
 			}catch(SocketTimeoutException e){ //timeout waiting for response from root
 				//retry the query 1 more time if timeout
 				retry = true;
 				retryCount++;
 				ttl = -2;
 				finalIP = "0.0.0.0";
-				//System.out.println("SocketTimeOut: "+e.getLocalizedMessage());
+				System.out.println("SocketTimeOut: "+e.getLocalizedMessage());
 			}catch(Exception e){
 				//TODO: remove below
 				System.out.println("TYPE: " + e.getClass().getName());
