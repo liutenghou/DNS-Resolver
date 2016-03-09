@@ -95,7 +95,9 @@ public class DNSlookup {
 						}
 						
 						ttl = response.getTtl();
-						finalIP = recordValue.getHostAddress();
+						if(recordValue != null){
+							finalIP = recordValue.getHostAddress();
+						}
 					}
 				}
 			}catch(NullPointerException e){ //check if there is no ip for domain requested
@@ -105,6 +107,7 @@ public class DNSlookup {
 				}
 				//TODO: remove below
 				System.out.println("NULL POINTER: "+e.getLocalizedMessage());
+				e.printStackTrace();
 			}catch(SocketTimeoutException e){ //timeout waiting for response from root
 				//retry the query 1 more time if timeout
 				retry = true;

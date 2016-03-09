@@ -247,6 +247,8 @@ public class DNSResponse {
 			if (answerList[0].type == 5) {
 				return answerList[0].getCNAME();	
 			}
+		} else if(nsCount >= 1){
+			return nsList[0].getCNAME();
 		}
 		return null;
 	}
