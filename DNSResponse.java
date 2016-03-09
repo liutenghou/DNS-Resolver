@@ -205,8 +205,8 @@ public class DNSResponse {
 				return answerList[0].getIPaddress();
 			}
 		} else if (additionalCount >=1){
-				return altInfoList[0].getIPaddress();
-			}
+			return altInfoList[0].getIPaddress();
+		}
 		return (InetAddress) null;
 	}
 

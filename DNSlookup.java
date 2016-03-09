@@ -81,11 +81,19 @@ public class DNSlookup {
 					//if CNAME, record type == 5
 					if(recordType == 5){
 						cname = response.getCNAME();
-						query = createQuery(cname); //create another query with new doamin name
+						query = createQuery(cname); //create another query with new domain name
 						sendQuery(rootNameServer, query);
 						ttl = response.getTtl();
 					}else{
-						sendQuery(recordValue, query); //note this updates recordType
+						//If there is no additional information, then send another query with CNAME
+						if(recordValue == null){
+							cname = response.getCNAME();
+							query = createQuery(cname); //create another query with new domain name
+							sendQuery(rootNameServer, query);
+						} else{
+							sendQuery(recordValue, query); //note this updates recordType
+						}
+						
 						ttl = response.getTtl();
 						finalIP = recordValue.getHostAddress();
 					}
