@@ -80,7 +80,7 @@ public class DNSlookup {
 					
 					//if CNAME, record type == 5
 					if(recordType == 5){
-						cname = response.getCNAME();
+						cname = response.getRecordName();
 						query = createQuery(cname); //create another query with new domain name
 						sendQuery(rootNameServer, query);
 						ttl = response.getTtl();
