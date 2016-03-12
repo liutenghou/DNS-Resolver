@@ -50,8 +50,7 @@ public class DNSlookup {
 		fqdn = args[1];
 		original_fqdn = fqdn;
 		recordName = fqdn;
-		//System.out.println(fqdn); //test, TODO: remove 
-		//TODO: check if Additional Information is 0
+		
 		//TODO: possible for response to have wrong ID?
 		
 		//3 arguments, trace on
@@ -74,10 +73,10 @@ public class DNSlookup {
 				//check type that we get back getRecordType()
 				//send something back depending on first level
 				int count = 0;
-				while(count < 30){
+				while(count < 50){
 					//keep sending queries until we get a Type A response, or 30 requests
 					count++;
-					if(count >= 30){
+					if(count >= 50){
 						ttl = -3;
 						finalIP = "0.0.0.0";
 						break;
@@ -85,70 +84,32 @@ public class DNSlookup {
 					
 					//if we get a type A response and it's for our original query, then we're done
 					if(recordType == 1 && recordName.equals(fqdn)){
-						System.out.println("Case 1");
 						ttl = response.getTtl();
 						finalIP = recordValue.getHostAddress();
 						break;
 					} else if(recordType == 1 && !recordName.equals(fqdn)){
 						//we may have had to query the IP of an ns server, if we get it back then
 						//we re-query the orginal fqdn with the answer we got
-						System.out.println("Case 2");
 						cname = fqdn;
 						query = createQuery(fqdn);
 						sendQuery(recordValue, query);
 					} else if(recordType == 5){ //CNAME record as response
-						System.out.println("Case 3");
 						cname = response.getCNAME();
 						fqdn = cname; //if we get a CNAME record, then this is the new one we will compare with to stop
 						query = createQuery(cname); //create another query with new domain name
 						sendQuery(rootNameServer, query); //start again from the root server
 						ttl = response.getTtl();
 					} else if(recordValue == null){ //IP not in Additional info, we'll have to lookup IP of nameserver ourselves
-						System.out.println("Case 4");
 						cname = response.getCNAME();
 						query = createQuery(cname); //create another query with new domain name
 						sendQuery(rootNameServer, query);
 					} else {
 						//otherwise keep sending queries either with the original fqdn, or the ns server name
-						System.out.println("Case 5");
 						query = createQuery(cname);
 						sendQuery(recordValue, query);				
 					}
 					
 					
-					/*
-					//if CNAME, record type == 5
-					if(recordType == 5){
-						cname = response.getCNAME();
-						fqdn = cname; //if we get a CNAME record, then this is the new one we will compare with to stop
-						query = createQuery(cname); //create another query with new domain name
-						sendQuery(rootNameServer, query);
-						ttl = response.getTtl();
-					} else {						
-						//If there is no additional information, then send another query with 
-						//name of the ns server
-						if(recordValue == null){
-							cname = response.getCNAME();
-							query = createQuery(cname); //create another query with new domain name
-							sendQuery(rootNameServer, query);
-						} else if(recordType == 1 && recordName.equals(fqdn)){
-							//if we get a type A response and it's for our original query, then we're done
-							ttl = response.getTtl();
-							finalIP = recordValue.getHostAddress();
-							break;
-						} else if(recordType == 1 && !recordName.equals(fqdn)){
-							//we may have had to query the IP of an ns server, if we get it back then
-							//we re-query the orginal fqdn with the answer we got
-							cname = fqdn;
-							query = createQuery(fqdn);
-							sendQuery(recordValue, query);
-						} else{
-							//otherwise keep sending queries either with the original fqdn, or the ns server name
-							query = createQuery(cname);
-							sendQuery(recordValue, query);							
-						}
-					}
-					*/
 				}				
 			} catch(NullPointerException e){ //check if there is no ip for domain requested
 				if(recordType == -1 && (response.getReplyCode() == 3)){
@@ -160,20 +121,16 @@ public class DNSlookup {
 					ttl = -4;
 					finalIP = "0.0.0.0";
 				}
-				//TODO: remove below
-				System.out.println("NULL POINTER: "+e.getLocalizedMessage());
-				e.printStackTrace();
 			}catch(SocketTimeoutException e){ //timeout waiting for response from root
 				//retry the query 1 more time if timeout
 				retry = true;
 				retryCount++;
 				ttl = -2;
 				finalIP = "0.0.0.0";
-				System.out.println("SocketTimeOut: "+e.getLocalizedMessage());
 			}catch(Exception e){
-				//TODO: remove below
-				System.out.println("TYPE: " + e.getClass().getName());
-				System.out.println("ERROR: " + e.getMessage());
+				//Other unknown exception
+				ttl = -4;
+				finalIP = "0.0.0.0";
 			}
 		} while(retryCount <= 1 && retry == true); //allow 1 retry in case of timeout
 		
@@ -182,6 +139,8 @@ public class DNSlookup {
 	}
 
 	private static void sendQuery(InetAddress server, byte[] query) throws IOException{
+		int sessionInt = ((sessionUid[0] & 0xff) << 8) | (sessionUid[1] & 0xff);
+		
 		DatagramSocket socket = new DatagramSocket();
 		DatagramPacket packetSent = new DatagramPacket(query, query.length);
 		int responseSize;
@@ -190,23 +149,28 @@ public class DNSlookup {
 		
 		socket.setSoTimeout(5000); //timeout if waiting for more than 5 seconds for response
 		socket.connect(server,53);	
-		socket.send(packetSent); //sends the byte packet
+		
+		//send the packet
+		int count = 0;
+		do{
+			count++;
+			socket.send(packetSent); //sends the byte packet
 
-		responseSize = socket.getReceiveBufferSize();
-		data = new byte[responseSize];
-		packetReceived = new DatagramPacket(data, responseSize);
-		socket.receive(packetReceived);
+			responseSize = socket.getReceiveBufferSize();
+			data = new byte[responseSize];
+			packetReceived = new DatagramPacket(data, responseSize);
+			socket.receive(packetReceived);
 
-		response = new DNSResponse(packetReceived.getData(), responseSize, server, tracingOn);
+			response = new DNSResponse(packetReceived.getData(), responseSize, server, tracingOn);
+		}while(response.queryID() != sessionInt && count<5); //if queryID does not match responseID, resend query
+		
 		recordType = response.getRecordType();
 		//TODO: check these response values
 		recordName = response.getRecordName();
 		if(recordType != 5){
 			ttl = response.getTtl();
-			recordValue = response.getIPaddr(); //TODO: this should probably be moved up to the main method
+			recordValue = response.getIPaddr(); 
 		}
-		//TODO: remove after testing
-		System.out.format("4DEBUG: recordName: %-30s , ttl: %-10d , recordType: %-4s, recordValue: %s\n", recordName, ttl, recordType, recordValue);
 	}
 
 	//create a properly formatted query
@@ -246,10 +210,8 @@ public class DNSlookup {
 
 	//Create a random 2-byte UID
 	private static byte[] createUID(){
-		//TODO: fix random, maybe
-		Random random = new Random(); //can't get time to work for some reason
+		Random random = new Random(); 
 		byte[] bytes = new byte[2];
-
 		random.nextBytes(bytes);
 
 		return bytes;

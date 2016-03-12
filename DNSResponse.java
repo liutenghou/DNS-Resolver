@@ -21,9 +21,6 @@ public class DNSResponse {
 	boolean isQuery = true;
 
 	void dumpResponse() {
-		//original
-//	 	System.out.println("\n\nQuery ID     " + queryID + " " + query.getQueryAsString() + " --> " + 
-//	 			query.getServerAddress().getHostAddress());
 		System.out.println("\n\nQuery ID     " + queryID + " " + aaFQDN + " --> " +
 				server.getHostAddress());
 	 	System.out.println("Response ID: " + queryID + " Authoritative = " + authoritative);
@@ -59,8 +56,6 @@ public class DNSResponse {
 
 	public DNSResponse (byte[] data, int len, InetAddress server, Boolean tracingOn) {
 		this.server = server;
-		// System.out.println(Arrays.toString(data));
-		// query = q;
 		// 1st and 2nd bytes, QUERYID
 		queryID = 	(data[byteNo++] << 8) & 0xff00; ;
 		queryID = queryID | (data[byteNo++] & 0xff);
@@ -68,19 +63,17 @@ public class DNSResponse {
 		// Check if 3rd byte, first bit is 1 (query response)
 		// if not return
 		if ((data[byteNo] & 0xc0) != 0x80 ) {
-			System.out.println("3rd byte, first bit is 0 (query response)");
 			return;
 		}
 		if ((data[byteNo] & 0x4) != 0) {
 			authoritative = true;
 		}
 
-		//TODO: use this for errors
+		//use this for errors
 		//4th byte, RCODE: reply code
 		byteNo++;  
 		replyCode = data[byteNo] & 0xf;
 		if (replyCode != 0) {
-			//System.out.println("4th byte, RCODE: reply code");
 			return;
 		}
 		
@@ -90,7 +83,6 @@ public class DNSResponse {
 		count |= (data[byteNo++] & 0xff);
 		// We are only ever going to deal with questions of size 1;
 		if (count != 1){
-			//System.out.println("We are only ever going to deal with questions of size 1;");
 			return; 
 		}
 		
@@ -127,8 +119,6 @@ public class DNSResponse {
 		for (int i = 0; i < additionalCount; i++) {
 			altInfoList[i] = getRR(data);
 		}
-
-		//System.out.println("The fqdn is: " + aaFQDN);
 
 		decoded = true;
 		//if -t option, print trace
