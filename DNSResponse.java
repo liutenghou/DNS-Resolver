@@ -61,7 +61,6 @@ public class DNSResponse {
 		this.server = server;
 		// System.out.println(Arrays.toString(data));
 		// query = q;
-		
 		// 1st and 2nd bytes, QUERYID
 		queryID = 	(data[byteNo++] << 8) & 0xff00; ;
 		queryID = queryID | (data[byteNo++] & 0xff);
@@ -69,6 +68,7 @@ public class DNSResponse {
 		// Check if 3rd byte, first bit is 1 (query response)
 		// if not return
 		if ((data[byteNo] & 0xc0) != 0x80 ) {
+			System.out.println("3rd byte, first bit is 0 (query response)");
 			return;
 		}
 		if ((data[byteNo] & 0x4) != 0) {
@@ -80,6 +80,7 @@ public class DNSResponse {
 		byteNo++;  
 		replyCode = data[byteNo] & 0xf;
 		if (replyCode != 0) {
+			System.out.println("4th byte, RCODE: reply code");
 			return;
 		}
 		
@@ -89,6 +90,7 @@ public class DNSResponse {
 		count |= (data[byteNo++] & 0xff);
 		// We are only ever going to deal with questions of size 1;
 		if (count != 1){
+			System.out.println("We are only ever going to deal with questions of size 1;");
 			return; 
 		}
 		
@@ -129,7 +131,6 @@ public class DNSResponse {
 		//System.out.println("The fqdn is: " + aaFQDN);
 
 		decoded = true;
-		
 		//if -t option, print trace
 		if(tracingOn){
 			dumpResponse();

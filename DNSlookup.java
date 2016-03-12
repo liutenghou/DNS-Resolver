@@ -18,6 +18,7 @@ public class DNSlookup {
 	static boolean tracingOn = false;
 	static InetAddress rootNameServer;
 	static byte[] sessionUid;
+	static String recordName;
 	static InetAddress recordValue;
 	static int recordType;
 	static byte[] query;
@@ -46,6 +47,7 @@ public class DNSlookup {
 		rootNameServer = InetAddress.getByName(args[0]); //gets back InetAddress object
 		
 		fqdn = args[1];
+		recordName = fqdn;
 		//System.out.println(fqdn); //test, TODO: remove 
 		//TODO: check if Additional Information is 0
 		//TODO: possible for response to have wrong ID?
@@ -65,11 +67,12 @@ public class DNSlookup {
 				sendQuery(rootNameServer, query);
 				ttl = response.getTtl();
 				finalIP = recordValue.getHostAddress();
-				
+				cname = fqdn; //this will be the original fqdn, until we need to change it
+
 				//check type that we get back getRecordType()
 				//send something back depending on first level
 				int count = 0;
-				while(recordType != 1 && count < 30){
+				while(count < 30){
 					//keep sending queries until we get a Type A response, or 30 requests
 					count++;
 					if(count >= 30){
@@ -84,23 +87,33 @@ public class DNSlookup {
 						query = createQuery(cname); //create another query with new domain name
 						sendQuery(rootNameServer, query);
 						ttl = response.getTtl();
-					}else{
-						//If there is no additional information, then send another query with CNAME
+					} else{						
+						//If there is no additional information, then send another query with 
+						//name of the ns server
 						if(recordValue == null){
 							cname = response.getCNAME();
 							query = createQuery(cname); //create another query with new domain name
 							sendQuery(rootNameServer, query);
+						} else if(recordType == 1 && recordName.equals(fqdn)){
+							//if we get a type A response and it's for our original query, then we're done
+							ttl = response.getTtl();
+							finalIP = recordValue.getHostAddress();
+							break;
+						} else if(recordType == 1 && !recordName.equals(fqdn)){
+							//we may have had to query the IP of an ns server, if we get it back then
+							//we re-query the orginal fqdn with the answer we got
+							cname = fqdn;
+							query = createQuery(fqdn);
+							sendQuery(recordValue, query);
 						} else{
-							sendQuery(recordValue, query); //note this updates recordType
+							//otherwise keep sending queries either with the original fqdn, or the ns server name
+							query = createQuery(cname);
+							sendQuery(recordValue, query);							
 						}
 						
-						ttl = response.getTtl();
-						if(recordValue != null){
-							finalIP = recordValue.getHostAddress();
-						}
 					}
-				}
-			}catch(NullPointerException e){ //check if there is no ip for domain requested
+				}				
+			} catch(NullPointerException e){ //check if there is no ip for domain requested
 				if(recordType == -1 && (response.getReplyCode() == 3)){
 					ttl = -1;
 					finalIP = "0.0.0.0";
@@ -120,7 +133,7 @@ public class DNSlookup {
 				System.out.println("TYPE: " + e.getClass().getName());
 				System.out.println("ERROR: " + e.getMessage());
 			}
-		}while(retryCount <= 1 && retry == true); //allow 1 retry in case of timeout
+		} while(retryCount <= 1 && retry == true); //allow 1 retry in case of timeout
 		
 		//print out final answer
 		System.out.println(fqdn + " " + ttl + " " + finalIP);
@@ -146,14 +159,14 @@ public class DNSlookup {
 		response = new DNSResponse(packetReceived.getData(), responseSize, server, tracingOn);
 		recordType = response.getRecordType();
 		//TODO: check these response values
-		String recordName = response.getRecordName();
-		
+		recordName = response.getRecordName();
 		if(recordType != 5){
 			ttl = response.getTtl();
 			recordValue = response.getIPaddr(); //TODO: this should probably be moved up to the main method
+			System.out.println("*********recordValue*********: " + recordValue);
 		}
 		
-		System.out.format("4DEBUG: %-30s , ttl: %-10d , record type: %-4s %s\n", recordName, ttl, recordType, recordValue);
+		//System.out.format("4DEBUG: %-30s , ttl: %-10d , record type: %-4s %s\n", recordName, ttl, recordType, recordValue);
 	}
 
 	//create a properly formatted query
