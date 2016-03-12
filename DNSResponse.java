@@ -80,7 +80,7 @@ public class DNSResponse {
 		byteNo++;  
 		replyCode = data[byteNo] & 0xf;
 		if (replyCode != 0) {
-			System.out.println("4th byte, RCODE: reply code");
+			//System.out.println("4th byte, RCODE: reply code");
 			return;
 		}
 		
@@ -90,7 +90,7 @@ public class DNSResponse {
 		count |= (data[byteNo++] & 0xff);
 		// We are only ever going to deal with questions of size 1;
 		if (count != 1){
-			System.out.println("We are only ever going to deal with questions of size 1;");
+			//System.out.println("We are only ever going to deal with questions of size 1;");
 			return; 
 		}
 		

@@ -83,6 +83,40 @@ public class DNSlookup {
 						break;
 					}
 					
+					//if we get a type A response and it's for our original query, then we're done
+					if(recordType == 1 && recordName.equals(fqdn)){
+						System.out.println("Case 1");
+						ttl = response.getTtl();
+						finalIP = recordValue.getHostAddress();
+						break;
+					} else if(recordType == 1 && !recordName.equals(fqdn)){
+						//we may have had to query the IP of an ns server, if we get it back then
+						//we re-query the orginal fqdn with the answer we got
+						System.out.println("Case 2");
+						cname = fqdn;
+						query = createQuery(fqdn);
+						sendQuery(recordValue, query);
+					} else if(recordType == 5){ //CNAME record as response
+						System.out.println("Case 3");
+						cname = response.getCNAME();
+						fqdn = cname; //if we get a CNAME record, then this is the new one we will compare with to stop
+						query = createQuery(cname); //create another query with new domain name
+						sendQuery(rootNameServer, query); //start again from the root server
+						ttl = response.getTtl();
+					} else if(recordValue == null){ //IP not in Additional info, we'll have to lookup IP of nameserver ourselves
+						System.out.println("Case 4");
+						cname = response.getCNAME();
+						query = createQuery(cname); //create another query with new domain name
+						sendQuery(rootNameServer, query);
+					} else {
+						//otherwise keep sending queries either with the original fqdn, or the ns server name
+						System.out.println("Case 5");
+						query = createQuery(cname);
+						sendQuery(recordValue, query);				
+					}
+					
+					
+					/*
 					//if CNAME, record type == 5
 					if(recordType == 5){
 						cname = response.getCNAME();
@@ -90,7 +124,7 @@ public class DNSlookup {
 						query = createQuery(cname); //create another query with new domain name
 						sendQuery(rootNameServer, query);
 						ttl = response.getTtl();
-					} else{						
+					} else {						
 						//If there is no additional information, then send another query with 
 						//name of the ns server
 						if(recordValue == null){
@@ -113,12 +147,17 @@ public class DNSlookup {
 							query = createQuery(cname);
 							sendQuery(recordValue, query);							
 						}
-						
 					}
+					*/
 				}				
 			} catch(NullPointerException e){ //check if there is no ip for domain requested
 				if(recordType == -1 && (response.getReplyCode() == 3)){
 					ttl = -1;
+					finalIP = "0.0.0.0";
+				}
+				// SOA record
+				if(recordType == 6){
+					ttl = -4;
 					finalIP = "0.0.0.0";
 				}
 				//TODO: remove below
@@ -166,6 +205,8 @@ public class DNSlookup {
 			ttl = response.getTtl();
 			recordValue = response.getIPaddr(); //TODO: this should probably be moved up to the main method
 		}
+		//TODO: remove after testing
+		System.out.format("4DEBUG: recordName: %-30s , ttl: %-10d , recordType: %-4s, recordValue: %s\n", recordName, ttl, recordType, recordValue);
 	}
 
 	//create a properly formatted query
