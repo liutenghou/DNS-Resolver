@@ -33,6 +33,7 @@ public class DNSlookup {
 	public static void main(String[] args) throws Exception {
 		//initialize variables
 		String fqdn = "";
+		String original_fqdn = "";
 		ttl = -4;
 		finalIP = "0.0.0.0";
 		byte query[]; 
@@ -47,6 +48,7 @@ public class DNSlookup {
 		rootNameServer = InetAddress.getByName(args[0]); //gets back InetAddress object
 		
 		fqdn = args[1];
+		original_fqdn = fqdn;
 		recordName = fqdn;
 		//System.out.println(fqdn); //test, TODO: remove 
 		//TODO: check if Additional Information is 0
@@ -83,7 +85,8 @@ public class DNSlookup {
 					
 					//if CNAME, record type == 5
 					if(recordType == 5){
-						cname = response.getRecordName();
+						cname = response.getCNAME();
+						fqdn = cname; //if we get a CNAME record, then this is the new one we will compare with to stop
 						query = createQuery(cname); //create another query with new domain name
 						sendQuery(rootNameServer, query);
 						ttl = response.getTtl();
@@ -136,7 +139,7 @@ public class DNSlookup {
 		} while(retryCount <= 1 && retry == true); //allow 1 retry in case of timeout
 		
 		//print out final answer
-		System.out.println(fqdn + " " + ttl + " " + finalIP);
+		System.out.println(original_fqdn + " " + ttl + " " + finalIP);
 	}
 
 	private static void sendQuery(InetAddress server, byte[] query) throws IOException{
@@ -146,7 +149,7 @@ public class DNSlookup {
 		DatagramPacket packetReceived;
 		byte[] data;
 		
-		socket.setSoTimeout(5000); //timeout if waiting for more than 4 seconds for response
+		socket.setSoTimeout(5000); //timeout if waiting for more than 5 seconds for response
 		socket.connect(server,53);	
 		socket.send(packetSent); //sends the byte packet
 
@@ -155,7 +158,6 @@ public class DNSlookup {
 		packetReceived = new DatagramPacket(data, responseSize);
 		socket.receive(packetReceived);
 
-		//FOR DEBUGGING, delete/modify below this line
 		response = new DNSResponse(packetReceived.getData(), responseSize, server, tracingOn);
 		recordType = response.getRecordType();
 		//TODO: check these response values
@@ -163,10 +165,7 @@ public class DNSlookup {
 		if(recordType != 5){
 			ttl = response.getTtl();
 			recordValue = response.getIPaddr(); //TODO: this should probably be moved up to the main method
-			System.out.println("*********recordValue*********: " + recordValue);
 		}
-		
-		//System.out.format("4DEBUG: %-30s , ttl: %-10d , record type: %-4s %s\n", recordName, ttl, recordType, recordValue);
 	}
 
 	//create a properly formatted query
